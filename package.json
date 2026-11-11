@@ -1,0 +1,1 @@
+{"dependencies":{"@vercel/blob":"2.9.0","qrcode":"1.5.4"},"engines":{"node":">=24"},"name":"kantor-rpg","private":true,"scripts":{"test":"node --test tests/serverless.test.mjs"},"type":"module","version":"0.1.0"}
