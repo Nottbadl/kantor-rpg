@@ -32,8 +32,8 @@ export const BOARD_FIXTURES: Record<string, BoardTab> = {
 const BOARD_LABEL: Record<BoardTab, string> = { handoffs: 'Papan Handoff', tasks: 'Daftar Pekerjaan', log: 'Log Aktivitas' };
 /** Persona -> Hermes profile that receives commands (server roster is the authority). */
 export const ACTOR_PROFILE: Record<string, string> = {
-  'ACT-MAX': 'default', 'ACT-ECHO': 'echo', 'ACT-LEO': 'leo', 'ACT-NOVA': 'enterprise', 'ACT-HUGO': 'sipil',
-  'ACT-BRUNO': 'infra', 'ACT-KEVIN': 'sales', 'ACT-REX': 'labs',
+  'ACT-MAX': 'muse', 'ACT-ECHO': 'echo', 'ACT-LEO': 'asep', 'ACT-NOVA': 'enterprise', 'ACT-HUGO': 'sipil',
+  'ACT-BRUNO': 'udin', 'ACT-KEVIN': 'sales', 'ACT-REX': 'barong',
 };
 
 export interface Interactable {
@@ -479,7 +479,7 @@ export class Game {
   }
 
   /** Display name used on the local leaderboards. */
-  playerName = 'Budi';
+  playerName = 'Jullian';
 
   private areaTrack(): string {
     return trackForRoom(this.roomId, this.player.floor);

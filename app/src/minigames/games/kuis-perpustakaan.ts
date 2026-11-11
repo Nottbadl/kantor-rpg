@@ -50,7 +50,7 @@ export function buildBank(t: T, rand: () => number): Question[] {
     raw.push({ id, q, right: o.right, wrong: o.wrong, why: why(lvl) });
   };
   where('office-billiard', /BILLIARD/, t('Ruang biliar ada di lantai berapa?'), (n) => t('Ruang biliar ada di lantai {n}, area rekreasi.', { n }));
-  where('office-server', /SERVER/, t('Ruang server ada di lantai berapa?'), (n) => t('Ruang server ada di lantai {n}, dekat area Bruno.', { n }));
+  where('office-server', /SERVER/, t('Ruang server ada di lantai berapa?'), (n) => t('Ruang server ada di lantai {n}, dekat area Udin.', { n }));
   where('office-read', /-READ$/, t('Perpustakaan ada di lantai berapa?'), (n) => t('Perpustakaan ada di lantai {n}, kamu sedang di sana.', { n }));
   where('office-gym', /-GYM$/, t('Ruang olahraga ada di lantai berapa?'), (n) => t('Ruang olahraga ada di lantai {n}.', { n }));
   where('office-meet', /-MEET$/, t('Ruang rapat besar ada di lantai berapa?'), (n) => t('Ruang rapat besar ada di lantai {n}, dekat lobby.', { n }));
@@ -74,13 +74,13 @@ export function buildBank(t: T, rand: () => number): Question[] {
   { const p = pickRoom(l1, l2); const n = levelOf(l1); raw.push({ id: 'office-on-l1', q: t('Ruang mana yang ada di lantai {n}?', { n }), ...p, why: t('{r} ada di lantai {n}, lantai kerja.', { r: p.right, n }) }); }
   const roleQ = (id: string, name: string, q: string) => {
     const a = actorByName(name);
-    const others = WORLD.actors.filter((x) => x.role !== a.role && x.displayName !== 'Budi').map((x) => t(x.role));
+    const others = WORLD.actors.filter((x) => x.role !== a.role && x.displayName !== 'Jullian').map((x) => t(x.role));
     const wrong: string[] = [];
     while (wrong.length < 3) wrong.push(others.splice(Math.floor(rand() * others.length), 1)[0]);
     raw.push({ id, q, right: t(a.role), wrong, why: t('{who}: {r}.', { who: name, r: t(a.role) }) });
   };
   roleQ('office-nova', 'Nova', t('Apa peran Nova di tim?'));
-  roleQ('office-bruno', 'Bruno', t('Apa peran Bruno di tim?'));
+  roleQ('office-udin', 'Udin', t('Apa peran Udin di tim?'));
   roleQ('office-kevin', 'Kevin', t('Apa peran Kevin di tim?'));
   {
     const a = actorByName('Hugo');

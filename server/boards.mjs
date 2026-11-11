@@ -42,12 +42,16 @@ export function scrub(s) {
 
 const lane = (profile) => ROSTER.find((r) => r.profile === profile)?.name ?? profile ?? '?';
 
-export function makeSources(home) {
+export function makeSources(home, dataDir) {
   const H = path.join(home, '.hermes');
   return {
     kanbanDb: path.join(H, 'kanban.db'),
     bersama: path.join(home, 'Hermes', '_Bersama'),
     ompDir: path.join(home, '.omp', 'agent', 'sessions'),
+    // Status tim yang diperbarui manual oleh PM (file team-status.json di
+    // folder data backend; default ~/.hermes/kantor-rpg). Bukan proses agen
+    // yang terdeteksi otomatis — lihat readTeamStatus.
+    teamStatusFile: path.join(dataDir ?? path.join(H, 'kantor-rpg'), 'team-status.json'),
     logFile: (p) => (p === 'default' ? path.join(H, 'logs', 'agent.log') : path.join(H, 'profiles', p, 'logs', 'agent.log')),
   };
 }
@@ -97,9 +101,25 @@ function tailTools(file, sinceMs) {
 export const PRESENCE_ACTIVE_MS = 5 * 60_000;
 
 /**
+ * Status tim yang diperbarui manual oleh PM (bukan deteksi proses agen).
+ * Format: { "<profile>": { "status": "working"|"waiting"|"idle"|"unknown",
+ * "summary": "..." } }. File tidak ada / rusak / bukan objek -> null
+ * (sumber ini dilewati tanpa error). Dibaca ulang setiap kali
+ * buildPresence dipanggil, jadi mengikuti cache presence 4 detik.
+ */
+export function readTeamStatus(file) {
+  if (!file) return null;
+  let raw;
+  try { raw = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return raw;
+}
+
+/**
  * What each roster agent is really doing right now, for the NPCs. Order of
  * evidence: an RPG task in flight, a running Kanban task, tool calls in the
- * profile's agent.log in the last 5 minutes. No evidence = idle.
+ * profile's agent.log in the last 5 minutes, then the PM-maintained
+ * team-status.json file. No evidence = idle.
  * `rpg` is [{profile, status, message}] from the dispatcher.
  */
 export function buildPresence(src, rpg = [], now = Date.now()) {
@@ -107,6 +127,7 @@ export function buildPresence(src, rpg = [], now = Date.now()) {
   try {
     kanban = sql(src.kanbanDb, "select assignee,status,title from tasks where status in ('running','claimed','blocked') order by created_at desc limit 200");
   } catch { kanban = null; }
+  const team = readTeamStatus(src.teamStatusFile);
   const since = now - PRESENCE_ACTIVE_MS;
   return ROSTER.map((r) => {
     const base = { profile: r.profile, name: r.name, actorId: r.actorId };
@@ -119,6 +140,13 @@ export function buildPresence(src, rpg = [], now = Date.now()) {
     if (run) return { ...base, status: 'working', source: 'Kanban', summary: clip(scrub(run.title), 70) };
     const tools = tailTools(src.logFile(r.profile), since);
     if (tools.length) return { ...base, status: 'working', source: 'agent.log', summary: `Aktif di Hermes (${tools.length} langkah, 5 menit terakhir)` };
+    // Sumber ke-4: status tugas yang diperbarui manual oleh PM. Prioritas
+    // paling rendah — bukti nyata di atas selalu menang. 'bekerja' di sini
+    // artinya "memegang tugas aktif", bukan proses agen yang terdeteksi.
+    const ts = team?.[r.profile];
+    if (ts && typeof ts === 'object' && ['working', 'waiting', 'idle', 'unknown'].includes(ts.status)) {
+      return { ...base, status: ts.status, source: 'Update PM', summary: clip(scrub(ts.summary ?? ''), 70) };
+    }
     if (kanban === null) return { ...base, status: 'unknown', source: 'Kanban tidak terbaca', summary: '' };
     return { ...base, status: 'idle', source: 'Kanban + agent.log', summary: k.length ? `${k.length} tugas diblokir` : '' };
   });

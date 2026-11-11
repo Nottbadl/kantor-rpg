@@ -33,7 +33,7 @@ export function createServer(cfg) {
   const now = cfg.now ?? (() => Date.now());
   const media = createMedia({ dataDir, home: cfg.home ?? os.homedir(), secret: cfg.proxySecret || 'dev', q: store.q, now, transcriber: cfg.transcriber });
   const push = cfg.push ?? createPush({ dataDir, q: store.q, now, fetchImpl: cfg.pushFetch });
-  const sources = makeSources(cfg.home ?? os.homedir());
+  const sources = makeSources(cfg.home ?? os.homedir(), dataDir);
   const boards = cfg.boards ?? boardCache(sources, cfg.boardTtlMs ?? 5000);
   let presenceMemo = { at: 0, value: null };
   const home = cfg.home ?? os.homedir();
